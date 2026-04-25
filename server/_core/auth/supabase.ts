@@ -23,7 +23,10 @@ function getJwks() {
 }
 
 export function getBearerToken(req: Request): string | null {
-  const header = req.header("authorization") ?? req.header("Authorization");
+  const raw =
+    (req.headers["authorization"] as string | string[] | undefined) ??
+    (req.headers["Authorization"] as string | string[] | undefined);
+  const header = Array.isArray(raw) ? raw[0] : raw;
   if (!header) return null;
   const m = header.match(/^Bearer\s+(.+)$/i);
   return m?.[1]?.trim() ? m[1].trim() : null;
