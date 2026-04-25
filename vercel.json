@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm build",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/dist/public/index.html" }
