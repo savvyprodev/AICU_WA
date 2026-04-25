@@ -1,4 +1,3 @@
-import type { Request } from "express";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { ForbiddenError } from "@shared/_core/errors";
 import { ENV } from "../env";
@@ -22,10 +21,13 @@ function getJwks() {
   return jwks;
 }
 
-export function getBearerToken(req: Request): string | null {
+type RequestLike = {
+  headers?: Record<string, string | string[] | undefined>;
+};
+
+export function getBearerToken(req: RequestLike): string | null {
   const raw =
-    (req.headers["authorization"] as string | string[] | undefined) ??
-    (req.headers["Authorization"] as string | string[] | undefined);
+    req.headers?.["authorization"] ?? req.headers?.["Authorization"];
   const header = Array.isArray(raw) ? raw[0] : raw;
   if (!header) return null;
   const m = header.match(/^Bearer\s+(.+)$/i);
