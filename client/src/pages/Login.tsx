@@ -57,6 +57,29 @@ export default function Login() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      setError(
+        "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON (or VITE_SUPABASE_ANON_KEY) in Vercel, then redeploy."
+      );
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const redirectTo = `${window.location.origin}/`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (oauthError) throw oauthError;
+    } catch (e: any) {
+      setError(e?.message ? String(e.message) : "Google sign-in failed");
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <Card className="w-full max-w-md p-6">
@@ -78,6 +101,22 @@ export default function Login() {
               Vercel Environment Variables (Production), then redeploy.
             </div>
           ) : null}
+
+          <Button
+            className="w-full"
+            variant="outline"
+            disabled={!isSupabaseConfigured || submitting}
+            onClick={signInWithGoogle}
+          >
+            Sign in with Google
+          </Button>
+
+          <div className="relative flex items-center justify-center py-1">
+            <div className="h-px w-full bg-border" />
+            <span className="absolute bg-background px-2 text-xs text-muted-foreground">
+              or
+            </span>
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
