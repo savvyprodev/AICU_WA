@@ -24,13 +24,30 @@ export async function createContext(
           subject: claims.sub,
         })) ?? null;
 
-      user =
-        existing ??
-        (await db.createUserForSupabase({
-          supabaseSub: claims.sub,
-          email: claims.email ?? null,
-          name: null,
-        }));
+      if (existing) {
+        user = existing;
+      } else {
+        // Auto-link migrated legacy accounts by email on first Supabase login.
+        // Safety: only link when there is exactly one matching legacy user row.
+        const email = claims.email ?? null;
+        const legacyMatch = email ? await db.getUniqueUserByEmail(email) : null;
+
+        if (legacyMatch) {
+          user =
+            (await db.linkSupabaseIdentityToExistingUser({
+              userId: legacyMatch.id,
+              supabaseSub: claims.sub,
+              email,
+              name: null,
+            })) ?? legacyMatch;
+        } else {
+          user = await db.createUserForSupabase({
+            supabaseSub: claims.sub,
+            email,
+            name: null,
+          });
+        }
+      }
     }
   } catch (error) {
     // Authentication is optional for public procedures.

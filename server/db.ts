@@ -95,6 +95,49 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUniqueUserByEmail(email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (normalized.length === 0) return null;
+
+  const db = await getDb();
+  if (!db) return null;
+
+  const matches = await db
+    .select()
+    .from(users)
+    .where(
+      sql`LOWER(${users.email}) = ${normalized}`
+    )
+    .limit(2);
+
+  if (matches.length !== 1) return null;
+  return matches[0];
+}
+
+export async function touchUserOnLogin(params: {
+  userId: number;
+  email?: string | null;
+  name?: string | null;
+  loginMethod?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) return;
+
+  const nextEmail = params.email?.trim() ? params.email.trim() : null;
+  const nextName = params.name?.trim() ? params.name.trim() : null;
+
+  // Only fill in missing profile fields to avoid clobbering legacy data.
+  await db
+    .update(users)
+    .set({
+      lastSignedIn: new Date(),
+      email: sql`COALESCE(${users.email}, ${nextEmail})`,
+      name: sql`COALESCE(${users.name}, ${nextName})`,
+      loginMethod: params.loginMethod ?? undefined,
+    })
+    .where(eq(users.id, params.userId));
+}
+
 export async function getUserByIdentity(params: {
   provider: "legacy" | "supabase";
   subject: string;
@@ -162,6 +205,33 @@ export async function createUserForSupabase(params: {
   });
 
   return user;
+}
+
+export async function linkSupabaseIdentityToExistingUser(params: {
+  userId: number;
+  supabaseSub: string;
+  email?: string | null;
+  name?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await linkUserIdentity({
+    userId: params.userId,
+    provider: "supabase",
+    subject: params.supabaseSub,
+  });
+
+  await touchUserOnLogin({
+    userId: params.userId,
+    email: params.email ?? null,
+    name: params.name ?? null,
+    // Keep legacy openId intact; just record that they can log in via Supabase now.
+    loginMethod: "supabase",
+  });
+
+  const user = await db.select().from(users).where(eq(users.id, params.userId)).limit(1);
+  return user.length > 0 ? user[0] : null;
 }
 
 export async function backfillLegacyIdentitiesFromUsersOpenId() {
