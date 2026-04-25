@@ -20,6 +20,14 @@ export function useAuth(options?: UseAuthOptions) {
   useEffect(() => {
     let mounted = true;
 
+    if (!supabase) {
+      setSession(null);
+      setSessionLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
     supabase.auth
       .getSession()
       .then(({ data }) => {
@@ -62,7 +70,7 @@ export function useAuth(options?: UseAuthOptions) {
       // Server-side logout becomes a no-op once we remove cookie sessions.
       // Keep calling it during migration to avoid breaking any existing behavior.
       await logoutMutation.mutateAsync().catch(() => undefined);
-      await supabase.auth.signOut();
+      await supabase?.auth.signOut();
     } catch (error: unknown) {
       if (
         error instanceof TRPCClientError &&

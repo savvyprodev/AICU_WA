@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,12 @@ export default function Login() {
   }
 
   const submit = async () => {
+    if (!supabase) {
+      setError(
+        "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables, then redeploy."
+      );
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -62,6 +68,17 @@ export default function Login() {
         </div>
 
         <div className="space-y-4">
+          {!isSupabaseConfigured ? (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+              Supabase is not configured for this deployment. Add
+              {" "}
+              <span className="font-mono">VITE_SUPABASE_URL</span> and
+              {" "}
+              <span className="font-mono">VITE_SUPABASE_ANON_KEY</span> to your
+              Vercel Environment Variables (Production), then redeploy.
+            </div>
+          ) : null}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
