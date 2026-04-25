@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useMemo, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function Login() {
   const { user, loading } = useAuth();
@@ -131,6 +131,10 @@ export default function Login() {
                 ? "Need an account? Sign up"
                 : "Have an account? Sign in"}
             </button>
+
+            <Link className="text-primary hover:underline" href="/forgot-password">
+              Forgot password?
+            </Link>
           </div>
         </div>
       </Card>

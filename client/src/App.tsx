@@ -12,12 +12,16 @@ import ByAccount from "./pages/ByAccount";
 import Settings from "./pages/Settings";
 import Import from "./pages/Import";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/" component={Home} />
       <Route path="/chats" component={AllChats} />
       <Route path="/chat/:id" component={ChatDetail} />
